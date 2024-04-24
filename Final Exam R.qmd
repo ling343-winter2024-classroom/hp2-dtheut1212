@@ -1,0 +1,409 @@
+---
+title: "CFB Analysis"
+author: Drew Theut
+format:
+ html:
+  theme: "journal"
+    
+---
+My entire life, I have loved college football. My favroite days are spent going to Michigan games with family and friends or sitting on the couch spending the entire day watchinig games. That is why I wanted to utilize my final project for this class by analyzing some CFB data. This data contains general offensive and defensive stats for each D1 team from 2013-2023. I used this data to look at offesnive and deffensive comparisons between Confrences and then between Michigan and their biggest rivals within the Big Ten.
+
+Description of Each Variable:
+	1	Year: The year the data was recorded.
+	2	Team: The name of the college football team along with its conference abbreviation.
+	3	Win: Number of games won by the team during the season.
+	4	Loss: Number of games lost by the team during the season.
+	5	Off.Rank: The offensive rank of the team nationally.
+	6	Off.Plays: Total offensive plays run by the team throughout the season.
+	7	Off.Yards: Total yards gained by the team on offense.
+	8	Off.Yards.Play: Average yards gained per offensive play.
+	9	Off.TDs: Total offensive touchdowns scored by the team.
+	10	Total.TDs: Total touchdowns scored by the team, including both offensive and other types (like defensive and special teams).
+	11	Off.Yards.per.Game: Average offensive yards gained per game.
+	12	Def.Rank: The defensive rank of the team nationally.
+	13	Def.Plays: Total defensive plays by the team throughout the season.
+	14	Yards.Allowed: Total yards allowed by the team on defense.
+	15	Yards.Play.Allowed: Average yards allowed per defensive play
+
+
+```{r}
+#| warning: false
+#| message: false
+#| include: false
+
+# Set CRAN mirror (Example using a common URL)
+options(repos = c(CRAN = "https://cloud.r-project.org/"))
+#not entierly sure what cran does but when i looked up the inital error message I was told to add this code
+
+
+
+library(readxl)
+
+
+data <- read_excel("/Users/drewtheut/Downloads/CFB!!.xlsx")
+
+
+```
+
+What were the best offenses from 2013-2020?
+
+```{r}
+#| warning: false
+#| message: false
+
+#install.packages("knitr")
+#install.packages("hms")
+#install.packages("kableExtra")
+
+library(readxl)
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+
+
+# Convert Off.Rank to a character for accurate filtering 
+data <- mutate(data, Off.Rank = as.character(Off.Rank))
+
+# Filter data for Off.Rank = '1' and for the years 2013 to 2020
+off_rank_1 <- data %>%
+  filter(Off.Rank == '1', Year >= 2013, Year <= 2020) %>%
+  select(Year, Team)  # Selecting both Year and Team
+
+# Display the filtered data as a table using kable 
+off_rank_1 %>%
+  kable("html", table.attr = "class='table table-bordered table-hover table-condensed'", caption = "Best Offense 2013-2020") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+I wanted to first look at this as I was curious of how much the top ranked offense wins the National Title. This suprised me, but the only top offense in this table who won a title was 2019 LSU who was led by Joe Burrow, Jamar Chase and scores of other future NFL stars in what would end up being a record breaking offesnive year. It leads me to believe that maybe having the best offesne isnt as important as some people say in winning a title 
+
+Next, I wanted to compare Michigan to their two arch rivals, Michigan State and Ohio State. I started by asking the question, in 2013 who had more total TDs?
+```{r}
+
+#| warning: false
+#| message: false
+# Load the necessary libraries
+
+library(readxl)
+library(dplyr)
+
+library(ggplot2)
+
+# Load the data from the Excel file
+data <- read_excel("/Users/drewtheut/Downloads/CFB!!.xlsx")
+
+# Define the specific team names as they appear in your dataset
+teams_of_interest <- c("Michigan (Big Ten)", "Ohio St. (Big Ten)", "Michigan St. (Big Ten)")
+
+# Filter data for the year 2013 and the specified teams
+filtered_data <- data %>%
+  filter(Year == 2013, Team %in% teams_of_interest)
+
+# Convert 'Total.TDs' from character to numeric if necessary
+filtered_data <- filtered_data %>%
+  mutate(Total.TDs = as.numeric(Total.TDs))
+
+# Check for conversion errors, which result in NAs
+sum(is.na(filtered_data$Total.TDs))
+
+# Summarize data to get total touchdowns by team
+team_tds_summary <- filtered_data %>%
+  group_by(Team) %>%
+  summarise(Total_TDs = sum(Total.TDs, na.rm = TRUE))
+
+
+ggplot(team_tds_summary, aes(x = Team, y = Total_TDs, fill = Team)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Total Touchdowns by Team in 2013",
+       x = "Team", y = "Total Touchdowns") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+From this graph you can see the dominant offense of OSU which was their trademark under fromer coach Urban Meyer. The "power spread" offesnive concept he brought to the Big Ten dominated Big Ten Defenses throughout his time at OSU. What suprised me was that Michigan scored 1 more touchdown then MSU did. Michigan was known this year for having a great offense but horrible defense and this was the year MSU won the whole Big Ten. To further explore this my next question was, how did the total yards allowed differ between these teams in 2013? 
+
+```{r}
+#| warning: false
+#| message: false
+# Load the necessary libraries
+library(readxl)
+library(dplyr)
+library(ggplot2) 
+# Load the data from the Excel file
+data <- read_excel("/Users/drewtheut/Downloads/CFB!!.xlsx")
+
+# Define the specific team names as they appear in the dataset
+teams_of_interest <- c("Michigan (Big Ten)", "Ohio St. (Big Ten)", "Michigan St. (Big Ten)")
+
+# Filter data for the year 2013 and the specified teams
+filtered_data <- data %>%
+  filter(Year == 2013, Team %in% teams_of_interest)
+
+# Convert 'Yards.Allowed' from character to numeric if necessary
+filtered_data$Yards.Allowed <- as.numeric(as.character(filtered_data$Yards.Allowed))
+
+# Check for conversion errors, which result in NAs
+sum(is.na(filtered_data$Yards.Allowed))
+
+# Summarize data to get total yards allowed by team
+team_yards_summary <- filtered_data %>%
+  group_by(Team) %>%
+  summarise(Total_Yards_Allowed = sum(Yards.Allowed, na.rm = TRUE))
+
+# Plotting the data
+ggplot(team_yards_summary, aes(x = Team, y = Total_Yards_Allowed, fill = Team)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Total Yards Allowed by Team in 2013",
+       x = "Team", y = "Total Yards Allowed") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+From this graph you can see the stifling defense that helped lead MSU to the Big Ten Title. OSU did not have a great defense but it did not matter much as they had such a fantastic offense. I just found looking at the data interesting as it shows how far Michigan has come.
+
+
+I know the scaling also is not fully right here, but I tried to combine the graphs into one visulization
+
+```{r}
+#| eval: false
+
+# Load the necessary libraries
+library(readxl)
+library(dplyr)
+library(ggplot2) # Make sure to load ggplot2 for plotting
+
+# Load the data from the Excel file
+data <- read_excel("/Users/drewtheut/Downloads/CFB!!.xlsx")
+
+# Define the specific team names as they appear in the dataset
+teams_of_interest <- c("Michigan (Big Ten)", "Ohio St. (Big Ten)", "Michigan St. (Big Ten)")
+
+# Filter data for the year 2013 and the specified teams
+filtered_data <- data %>%
+  filter(Year == 2013, Team %in% teams_of_interest)
+
+# Convert 'Total.TDs' and 'Yards.Allowed' from character to numeric if necessary
+filtered_data <- filtered_data %>%
+  mutate(
+    Total.TDs = as.numeric(Total.TDs),
+    Yards.Allowed = as.numeric(Yards.Allowed)
+  )
+
+# Check for conversion errors, which result in NAs
+sum(is.na(filtered_data$Total.TDs))
+sum(is.na(filtered_data$Yards.Allowed))
+
+# Summarize data to get total touchdowns and total yards allowed by team
+team_summary <- filtered_data %>%
+  group_by(Team) %>%
+  summarise(
+    Total_TDs = sum(Total.TDs, na.rm = TRUE),
+    Total_Yards_Allowed = sum(Yards.Allowed, na.rm = TRUE)
+  )
+
+# Reshape the data for plotting
+team_summary_long <- pivot_longer(team_summary,
+                                  cols = c(Total_TDs, Total_Yards_Allowed),
+                                  names_to = "Metric",
+                                  values_to = "Value")
+
+# Determine a scaling factor
+scaling_factor <- max(team_summary$Total_Yards_Allowed) / max(team_summary$Total_TDs)
+
+# Plotting the combined data with a secondary axis
+ggplot(team_summary_long, aes(x = Team, y = Value, fill = Metric)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_y_continuous(name = "Total Yards Allowed",
+                     sec.axis = sec_axis(~ . / scaling_factor, name = "Total Touchdowns")) +
+  labs(title = "Total Touchdowns and Yards Allowed by Team in 2013",
+       x = "Team",
+       y = "Value") +
+  scale_fill_manual(values = c("Total_TDs" = "blue", "Total_Yards_Allowed" = "red")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+
+
+
+
+
+
+
+Next, I wanted to look at the data from a confrence level. One of my favorite thing about CFB is the vastly different playstyles between the conferences. So I decided to ask, How do the Power-5 conferences compare in offensive rank?
+
+```{r}
+#| warning: false
+#| message: false
+
+library(readxl)
+library(dplyr)
+library(ggplot2)
+
+# Load the data
+data <- read_excel("/Users/drewtheut/Downloads/CFB!!.xlsx")
+
+# function to detect the conference based on team name
+find_conference <- function(team_name) {
+  if (grepl("Big Ten", team_name)) {
+    return("Big Ten")
+  } else if (grepl("Pac-12", team_name)) {
+    return("Pac-12")
+  } else if (grepl("Big 12", team_name)) {
+    return("Big 12")
+  } else if (grepl("SEC", team_name)) {
+    return("SEC")
+  } else if (grepl("ACC", team_name)) {
+    return("ACC")
+  } else {
+    return("Other")
+  }
+}
+
+# Apply the function to create a new column 'Conference'
+data$Conference <- sapply(data$Team, find_conference)
+
+# Filter data to include only teams from Power Five conferences
+power_five_data <- filter(data, Conference != "Other")
+
+# Convert Off.Rank to numeric (assuming it's currently read as a factor or character)
+power_five_data$Off.Rank <- as.numeric(as.character(power_five_data$Off.Rank))
+
+# Calculate the average offensive rank by conference
+average_off_rank <- power_five_data %>%
+  group_by(Conference) %>%
+  summarise(AverageRank = mean(Off.Rank, na.rm = TRUE)) %>%
+  arrange(AverageRank)
+
+# Create a bar graph
+ggplot(average_off_rank, aes(x = Conference, y = AverageRank, fill = Conference)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title = "Average Offensive Rank of Power Five Conferences",
+       x = "Conference",
+       y = "Average Offensive Rank")
+```
+
+
+From this graph you can see how the Big-12 and Pac-12 have the best offesnes, while the Big Ten has the lowest ranked offesnes. This makes sense as the Big Ten is known for thier run heavy offesnes with fantastic defenses. The Pac-12 and Big-12 are products of the "west coast" style of offense that prioritizes pass heavy offenses with less of a worry on defense. 
+
+
+
+
+For my final analysis, I wanted to explore something that is not a typical stat but I was still curious about. I was curious what the breakdown of plays between offense and defense for champion winning teams. I choose this years Michigans team and 2014 OSUs title winning team to use as comparisons.
+
+What was the share of offensive vs defensive plays for the Michigan 2023 team
+
+```{r michigan-plays-pie-chart, echo=FALSE, message=FALSE, warning=FALSE}
+# Load necessary libraries
+library(readxl)
+library(ggplot2)
+library(dplyr)
+
+data <- read_excel("/Users/drewtheut/Downloads/CFB!!.xlsx")
+
+# Filter for the 2023 Michigan team data
+michigan_data <- filter(data, Year == 2023 & grepl("Michigan", Team))
+
+# If there are non-numeric characters in the plays columns, they need to be removed
+# Convert the Off.Plays and Def.Plays columns to numeric
+michigan_data$Off.Plays <- as.numeric(gsub("[^0-9.-]", "", michigan_data$Off.Plays))
+michigan_data$Def.Plays <- as.numeric(gsub("[^0-9.-]", "", michigan_data$Def.Plays))
+
+# Handle any NAs that may have been introduced by the conversion
+michigan_data <- na.omit(michigan_data)
+
+# Calculate the sum of offensive and defensive plays
+offensive_plays <- sum(michigan_data$Off.Plays, na.rm = TRUE)
+defensive_plays <- sum(michigan_data$Def.Plays, na.rm = TRUE)
+
+# Create a data frame for the pie chart
+play_data <- data.frame(
+  Category = c("Offensive Plays", "Defensive Plays"),
+  Count = c(offensive_plays, defensive_plays)
+)
+
+# Load the package
+library(ggplot2)
+
+# Your data in a data frame
+data <- data.frame(
+  Category = c("Offensive Plays", "Defensive Plays"),
+  Count = c(300, 400)
+)
+
+# Create the pie chart
+pie_chart <- ggplot(data, aes(x="", y=Count, fill=Category)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  theme_void() +
+  scale_fill_brewer(palette="Pastel1") +
+  labs(fill="Category")
+
+# Display the pie chart
+print(pie_chart)
+
+
+
+```
+
+
+
+
+What was Ohio States offesnevie vs defesnive play breakdown in 2014
+```{r Ohio-plays-pie-chart, echo=FALSE, message=FALSE, warning=FALSE}
+# Load necessary libraries
+
+library(readxl)
+library(ggplot2)
+library(dplyr)
+
+data <- read_excel("/Users/drewtheut/Downloads/CFB!!.xlsx")
+
+# Filter for the 2023 Michigan team data
+OSU_data <- filter(data, Year == 2014 & grepl("Ohio State", Team))
+
+# If there are non-numeric characters in the plays columns, they need to be removed
+# Convert the Off.Plays and Def.Plays columns to numeric
+OSU_data$Off.Plays <- as.numeric(gsub("[^0-9.-]", "", OSU_data$Off.Plays))
+OSU_data$Def.Plays <- as.numeric(gsub("[^0-9.-]", "", OSU_data$Def.Plays))
+
+# Handle any NAs that may have been introduced by the conversion
+OSU_data <- na.omit(OSU_data)
+
+# Calculate the sum of offensive and defensive plays
+offensive_plays <- sum(OSU_data$Off.Plays, na.rm = TRUE)
+defensive_plays <- sum(OSU_data$Def.Plays, na.rm = TRUE)
+
+# Create a data frame for the pie chart
+play_data <- data.frame(
+  Category = c("Offensive Plays", "Defensive Plays"),
+  Count = c(offensive_plays, defensive_plays)
+)
+
+# Load the package
+library(ggplot2)
+
+# data frame
+data <- data.frame(
+  Category = c("Offensive Plays", "Defensive Plays"),
+  Count = c(433, 377)
+)
+
+# Create the pie chart
+pie_chart <- ggplot(data, aes(x="", y=Count, fill=Category)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  theme_void() +
+  scale_fill_brewer(palette="Pastel1") +
+  labs(fill="Category")
+
+# Display the pie chart
+print(pie_chart)
+
+```
+
+From these two pie graphs you can see that Michigan spent slightly more time on defense while OSU spent more time on offense. This tracks with the idenitity of each team as Michigan won a title with a histroically good defense while OSU won with a histroically good ofense 
+
+ 
